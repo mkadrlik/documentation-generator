@@ -76,7 +76,7 @@ class DocumentationGeneratorServer:
                         },
                         "ai_provider": {
                             "type": "string",
-                            "description": "AI provider to use (openai, anthropic)",
+                            "description": "AI provider to use (openai, anthropic, openrouter)",
                             "default": "openai"
                         },
                         "model": {

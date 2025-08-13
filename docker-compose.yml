@@ -8,6 +8,7 @@ services:
       - LOG_LEVEL=INFO
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
       - DEFAULT_AI_PROVIDER=${DEFAULT_AI_PROVIDER:-openai}
       - DEFAULT_MODEL=${DEFAULT_MODEL:-gpt-4o-mini}
       - DEFAULT_MAX_TOKENS=${DEFAULT_MAX_TOKENS:-4000}
@@ -30,13 +31,20 @@ services:
       - ./data:/app/data
       # Mount logs directory for local log files
       - ./logs:/app/logs
+    user: "1000:1000"
     ports:
       # Optional: Expose port for Prometheus metrics
       - "${PROMETHEUS_PORT:-9090}:${PROMETHEUS_PORT:-9090}"
       # Optional: Expose port for health checks
       - "${HEALTH_PORT:-8080}:8080"
     healthcheck:
-      test: ["CMD", "python", "-c", "import sys; print('Documentation Generator ready')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import sys; print('Documentation Generator ready')",
+        ]
       interval: 30s
       timeout: 10s
       retries: 2

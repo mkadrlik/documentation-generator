@@ -17,6 +17,7 @@ class AIClient:
         self.config = config
         self._openai_client = None
         self._anthropic_client = None
+        self._openrouter_client = None
         self.metrics = get_metrics(config)
     
     def _get_openai_client(self):
@@ -34,6 +35,17 @@ class AIClient:
                 raise ValueError("Anthropic API key not configured")
             self._anthropic_client = anthropic.AsyncAnthropic(api_key=self.config.anthropic_api_key)
         return self._anthropic_client
+    
+    def _get_openrouter_client(self):
+        """Get OpenRouter client (uses OpenAI-compatible API)"""
+        if not self._openrouter_client:
+            if not self.config.openrouter_api_key:
+                raise ValueError("OpenRouter API key not configured")
+            self._openrouter_client = openai.AsyncOpenAI(
+                api_key=self.config.openrouter_api_key,
+                base_url="https://openrouter.ai/api/v1"
+            )
+        return self._openrouter_client
     
     async def generate_text(
         self,
@@ -55,6 +67,8 @@ class AIClient:
             return await self._generate_openai(prompt, model, max_tokens, temperature)
         elif provider.lower() == "anthropic":
             return await self._generate_anthropic(prompt, model, max_tokens, temperature)
+        elif provider.lower() == "openrouter":
+            return await self._generate_openrouter(prompt, model, max_tokens, temperature)
         else:
             raise ValueError(f"Unsupported AI provider: {provider}")
     
@@ -119,4 +133,47 @@ class AIClient:
         except Exception as e:
             self.metrics.record_ai_request(provider="anthropic", model=model, success=False)
             logger.error(f"Anthropic generation error: {e}")
+            raise
+    
+    async def _generate_openrouter(self, prompt: str, model: str, max_tokens: int, temperature: float) -> str:
+        """Generate text using OpenRouter"""
+        try:
+            client = self._get_openrouter_client()
+            
+            # OpenRouter supports many models - use the model name as provided
+            # Popular OpenRouter models:
+            # - anthropic/claude-3-sonnet
+            # - anthropic/claude-3-haiku
+            # - openai/gpt-4o-mini
+            # - openai/gpt-4o
+            # - meta-llama/llama-3.1-8b-instruct
+            # - google/gemini-pro
+            
+            response = await client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert technical writer who creates clear, comprehensive documentation. Always respond with well-structured markdown."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=max_tokens,
+                temperature=temperature,
+                extra_headers={
+                    "HTTP-Referer": "https://github.com/mkadrlik/documentation-generator",
+                    "X-Title": "Documentation Generator MCP Server"
+                }
+            )
+            
+            content = response.choices[0].message.content.strip()
+            self.metrics.record_ai_request(provider="openrouter", model=model, success=True)
+            return content
+            
+        except Exception as e:
+            self.metrics.record_ai_request(provider="openrouter", model=model, success=False)
+            logger.error(f"OpenRouter generation error: {e}")
             raise

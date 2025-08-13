@@ -5,7 +5,7 @@ An MCP (Model Context Protocol) server that transforms meeting notes, transcript
 ## Features
 
 - **Multiple Document Types**: SOPs, Runbooks, Architecture docs, Implementation docs, and more
-- **AI-Powered Generation**: Uses OpenAI or Anthropic models for intelligent document creation
+- **AI-Powered Generation**: Uses OpenAI, Anthropic, or OpenRouter models for intelligent document creation
 - **Modular Architecture**: Easy to add new document types and templates
 - **Persistent Storage**: Saves generated documents with metadata
 - **Docker Support**: Runs in containers for easy deployment
@@ -32,6 +32,21 @@ An MCP (Model Context Protocol) server that transforms meeting notes, transcript
 
 ## Setup
 
+### Quick Start
+
+1. **Set up directories and permissions**:
+   ```bash
+   ./setup-permissions.sh
+   ```
+
+2. **Configure environment variables**:
+   Copy `.env.example` to `.env` and add your API keys
+
+3. **Run with Docker Compose**:
+   ```bash
+   docker-compose up
+   ```
+
 ### Environment Variables
 
 Copy `.env.example` to `.env` and configure:
@@ -40,6 +55,7 @@ Copy `.env.example` to `.env` and configure:
 # AI Provider Configuration
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 
 # Default AI Settings
 DEFAULT_AI_PROVIDER=openai
@@ -92,6 +108,31 @@ cd src
 python main.py
 ```
 
+## AI Provider Support
+
+### OpenAI
+- Direct integration with OpenAI API
+- Supports GPT-4o, GPT-4o-mini, and other models
+- Requires `OPENAI_API_KEY`
+
+### Anthropic
+- Direct integration with Anthropic API
+- Supports Claude 3 models (Haiku, Sonnet, Opus)
+- Requires `ANTHROPIC_API_KEY`
+
+### OpenRouter
+- Access to 100+ AI models through a single API
+- Includes models from OpenAI, Anthropic, Meta, Google, and more
+- Often more cost-effective than direct provider APIs
+- Requires `OPENROUTER_API_KEY`
+
+Popular OpenRouter models:
+- `anthropic/claude-3-sonnet` - High-quality reasoning
+- `anthropic/claude-3-haiku` - Fast and cost-effective
+- `openai/gpt-4o-mini` - Balanced performance
+- `meta-llama/llama-3.1-8b-instruct` - Open source alternative
+- `google/gemini-pro` - Google's flagship model
+
 ## Usage Examples
 
 ### Generate an SOP
@@ -106,6 +147,22 @@ python main.py
     "context": "This is for our web application deployment",
     "ai_provider": "openai",
     "model": "gpt-4o-mini"
+  }
+}
+```
+
+### Generate with OpenRouter
+
+```json
+{
+  "tool": "generate_documentation",
+  "arguments": {
+    "content": "Meeting transcript about system architecture...",
+    "doc_type": "architecture",
+    "title": "Microservices Architecture Design",
+    "context": "High-level system design for our new platform",
+    "ai_provider": "openrouter",
+    "model": "anthropic/claude-3-sonnet"
   }
 }
 ```
@@ -144,6 +201,40 @@ documentation-generator/
 ├── docker-compose.yml
 └── requirements.txt
 ```
+
+## Troubleshooting
+
+### Permission Errors
+
+If you see permission errors like:
+```
+PermissionError: [Errno 13] Permission denied: '/app/data/output'
+```
+
+**Solution 1: Use the setup script**
+```bash
+./setup-permissions.sh
+```
+
+**Solution 2: Manual setup**
+```bash
+mkdir -p data/output data/templates logs
+sudo chown -R 1000:1000 data/ logs/
+chmod -R 755 data/ logs/
+```
+
+**Solution 3: Run with proper user**
+```bash
+docker-compose run --user 1000:1000 documentation-generator
+```
+
+### Container Fallback Behavior
+The container automatically falls back to `/tmp` directories if it can't write to `/app/data`. Check logs for fallback messages.
+
+### API Key Issues
+- Ensure at least one AI provider API key is set
+- Check that the key is valid and has sufficient credits
+- Verify the model name is correct for the provider
 
 ## Adding New Document Types
 

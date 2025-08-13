@@ -25,6 +25,8 @@ registry:
         description: OpenAI API key for document generation
       - name: ANTHROPIC_API_KEY
         description: Anthropic API key for document generation (optional)
+      - name: OPENROUTER_API_KEY
+        description: OpenRouter API key for document generation (optional)
     env:
       - name: DEFAULT_AI_PROVIDER
         value: '{{documentation.ai.provider}}'
@@ -50,7 +52,7 @@ registry:
             properties:
               provider:
                 type: string
-                enum: ["openai", "anthropic"]
+                enum: ["openai", "anthropic", "openrouter"]
                 default: "openai"
                 description: AI provider for document generation
               model:

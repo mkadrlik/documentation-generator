@@ -233,11 +233,13 @@ $RECYCLE.BIN/
 # Project-specific ignores
 # Generated documents
 data/generated/
+data/output/
 generated_documents/
 output/
 
 # Logs
 logs/
+data/logs/
 *.log
 
 # Temporary files

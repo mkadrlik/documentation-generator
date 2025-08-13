@@ -11,20 +11,22 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
+# Copy source code and scripts
 COPY src/ ./src/
+COPY entrypoint.sh ./entrypoint.sh
 
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV LOG_LEVEL=INFO
 
-# Create directories with proper permissions
-RUN mkdir -p /app/logs /app/data/output /app/data/templates && \
+# Create directories with proper permissions and make entrypoint executable
+RUN mkdir -p /app/logs /app/data/output /app/data/templates /app/data/generated && \
+    chmod +x /app/entrypoint.sh && \
+    chmod -R 755 /app && \
     chown -R 1000:1000 /app
 
 # Run as non-root user
 USER 1000:1000
 
-# Simple startup
-WORKDIR /app/src
-CMD ["python", "main.py"]
+# Use entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
