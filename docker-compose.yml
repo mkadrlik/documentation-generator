@@ -1,0 +1,43 @@
+services:
+  documentation-generator:
+    container_name: documentation-generator
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - LOG_LEVEL=INFO
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DEFAULT_AI_PROVIDER=${DEFAULT_AI_PROVIDER:-openai}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gpt-4o-mini}
+      - DEFAULT_MAX_TOKENS=${DEFAULT_MAX_TOKENS:-4000}
+      - DEFAULT_TEMPERATURE=${DEFAULT_TEMPERATURE:-0.3}
+      - LOKI_ENABLED=${LOKI_ENABLED:-false}
+      - LOKI_HOST=${LOKI_HOST:-localhost}
+      - LOKI_PORT=${LOKI_PORT:-3100}
+      - LOKI_USERNAME=${LOKI_USERNAME:-}
+      - LOKI_PASSWORD=${LOKI_PASSWORD:-}
+      - LOKI_TENANT=${LOKI_TENANT:-}
+      - PROMETHEUS_ENABLED=${PROMETHEUS_ENABLED:-false}
+      - PROMETHEUS_PORT=${PROMETHEUS_PORT:-9090}
+      - PROMETHEUS_PATH=${PROMETHEUS_PATH:-/metrics}
+      - SYSLOG_ENABLED=${SYSLOG_ENABLED:-false}
+      - SYSLOG_HOST=${SYSLOG_HOST:-localhost}
+      - SYSLOG_PORT=${SYSLOG_PORT:-514}
+      - SYSLOG_FACILITY=${SYSLOG_FACILITY:-local0}
+    volumes:
+      # Mount data directory for output and templates
+      - ./data:/app/data
+      # Mount logs directory for local log files
+      - ./logs:/app/logs
+    ports:
+      # Optional: Expose port for Prometheus metrics
+      - "${PROMETHEUS_PORT:-9090}:${PROMETHEUS_PORT:-9090}"
+      # Optional: Expose port for health checks
+      - "${HEALTH_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; print('Documentation Generator ready')"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 30s

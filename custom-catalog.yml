@@ -1,0 +1,92 @@
+name: custom-catalog
+displayName: Docker MCP Custom Catalog
+registry:
+  documentation-generator:
+    description: Transform meeting notes, transcriptions, and group chats into structured documentation (SOPs, Runbooks, Architecture docs, etc.)
+    title: Documentation Generator MCP Server
+    type: server
+    dateAdded: "2025-08-12T22:00:00Z"
+    image: ghcr.io/mkadrlik/documentation-generator:latest
+    ref: ""
+    readme: https://github.com/mkadrlik/documentation-generator/blob/main/README.md
+    toolsUrl: ""
+    source: https://github.com/mkadrlik/documentation-generator
+    upstream: https://github.com/mkadrlik/documentation-generator
+    icon: ""
+    tools:
+      - name: list_document_types
+      - name: generate_documentation
+      - name: get_document_template
+      - name: add_document_type
+      - name: list_generated_documents
+      - name: get_generated_document
+    secrets:
+      - name: OPENAI_API_KEY
+        description: OpenAI API key for document generation
+      - name: ANTHROPIC_API_KEY
+        description: Anthropic API key for document generation (optional)
+    env:
+      - name: DEFAULT_AI_PROVIDER
+        value: '{{documentation.ai.provider}}'
+      - name: DEFAULT_MODEL
+        value: '{{documentation.ai.model}}'
+      - name: LOG_LEVEL
+        value: '{{documentation.logging.level}}'
+    prompts: 0
+    resources:
+      documentation://types:
+        description: Available documentation types and templates
+        mimeType: application/json
+      documentation://generated:
+        description: List of generated documents
+        mimeType: application/json
+    config:
+      - name: documentation
+        description: Configuration for documentation generator
+        type: object
+        properties:
+          ai:
+            type: object
+            properties:
+              provider:
+                type: string
+                enum: ["openai", "anthropic"]
+                default: "openai"
+                description: AI provider for document generation
+              model:
+                type: string
+                default: "gpt-4o-mini"
+                description: AI model to use for generation
+            required:
+              - provider
+              - model
+          logging:
+            type: object
+            properties:
+              level:
+                type: string
+                enum: ["DEBUG", "INFO", "WARNING", "ERROR"]
+                default: "INFO"
+                description: Logging level
+            required:
+              - level
+        required:
+          - ai
+          - logging
+    metadata:
+      pulls: 0
+      stars: 0
+      githubStars: 0
+      category: productivity
+      tags:
+        - documentation
+        - meeting-notes
+        - transcription
+        - ai
+        - markdown
+        - sop
+        - runbook
+        - architecture
+        - technical-writing
+      license: MIT License
+      owner: mkadrlik

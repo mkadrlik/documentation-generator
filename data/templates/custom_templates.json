@@ -1,0 +1,6 @@
+{
+  "test_doc": {
+    "description": "Test document type",
+    "template": "Test template: {title}\n\nContent: {content}"
+  }
+}
