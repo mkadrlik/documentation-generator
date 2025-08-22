@@ -34,7 +34,7 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
       - name: Run tests
-        run: pytest -q mcp/documentation-generator/test
+        run: pytest -q documentation-generator/test
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
