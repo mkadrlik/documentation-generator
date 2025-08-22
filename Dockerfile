@@ -14,7 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code and scripts
 COPY src/ ./src/
 COPY entrypoint.sh ./entrypoint.sh
-COPY test-permissions.py ./test-permissions.py
 
 # Set environment variables
 ENV PYTHONPATH=/app
