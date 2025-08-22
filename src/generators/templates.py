@@ -1,7 +1,6 @@
 """Document templates and prompts for different documentation types"""
 
 import json
-import os
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -12,12 +11,22 @@ logger = setup_logger(__name__)
 class DocumentTemplates:
     """Manages document templates and prompts"""
     
-    def __init__(self):
-        self.templates_dir = Path('/app/data/templates')
+    def __init__(self, templates_dir: Optional[str] = None):
+        # Allow configurable templates directory (helps tests and non-container runs)
+        if templates_dir:
+            self.templates_dir = Path(templates_dir)
+        else:
+            self.templates_dir = Path('/app/data/templates')
+
         self.custom_templates_file = self.templates_dir / 'custom_templates.json'
         
-        # Ensure templates directory exists
-        self.templates_dir.mkdir(parents=True, exist_ok=True)
+        # Ensure templates directory exists (best-effort)
+        try:
+            self.templates_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            # If we can't create the desired path (e.g., permissions), fall back silently
+            # The caller (e.g., DocumentGenerator) should pass a writable path when possible
+            pass
         
         # Load custom templates
         self._load_custom_templates()

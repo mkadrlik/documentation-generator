@@ -179,6 +179,19 @@ Popular OpenRouter models:
   }
 }
 ```
+## Transform Text Example
+
+```json
+{
+  "tool": "transform_text",
+  "arguments": {
+    "text": "Raw meeting notes...",
+    "prompt": "Summarize the following content in bullet points:\\n{content}",
+    "ai_provider": "openai",
+    "model": "gpt-4o-mini"
+  }
+}
+```
 
 ## Architecture
 

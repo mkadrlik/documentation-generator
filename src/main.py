@@ -113,6 +113,22 @@ class DocumentationGeneratorServer:
                 }
             ),
             Tool(
+                name="transform_text",
+                description="Transform arbitrary text using a provided prompt via the configured AI provider",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "text": {"type": "string", "description": "The text to transform"},
+                        "prompt": {"type": "string", "description": "Prompt or template to apply to the text (may include {content})"},
+                        "ai_provider": {"type": "string", "description": "AI provider to use (optional)"},
+                        "model": {"type": "string", "description": "Model to use (optional)"},
+                        "max_tokens": {"type": "integer", "description": "Max tokens for generation (optional)"},
+                        "temperature": {"type": "number", "description": "Temperature for generation (optional)"}
+                    },
+                    "required": ["text", "prompt"]
+                }
+            ),
+            Tool(
                 name="add_document_type",
                 description="Add a new document type with custom template/prompt",
                 inputSchema={
@@ -241,6 +257,37 @@ class DocumentationGeneratorServer:
         except Exception as e:
             logger.error(f"Error adding document type: {e}")
             return [TextContent(type="text", text=f"Error: {str(e)}")]
+
+    async def handle_transform_text(self, arguments: Dict[str, Any]) -> List[TextContent]:
+        """Transform arbitrary text using a provided prompt and AI client."""
+        try:
+            text = arguments.get("text", "")
+            prompt = arguments.get("prompt", "")
+            ai_provider = arguments.get("ai_provider", self.config.default_ai_provider)
+            model = arguments.get("model", self.config.default_model)
+            max_tokens = arguments.get("max_tokens", self.config.default_max_tokens)
+            temperature = arguments.get("temperature", self.config.default_temperature)
+
+            if "{content}" in prompt:
+                final_prompt = prompt.format(content=text)
+            else:
+                # If prompt doesn't include placeholder, append the text to the prompt
+                final_prompt = f"{prompt}\n\n{text}"
+
+            # Call AI client
+            result_text = await self.generator.ai_client.generate_text(
+                prompt=final_prompt,
+                provider=ai_provider,
+                model=model,
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+
+            return [TextContent(type="text", text=result_text)]
+
+        except Exception as e:
+            logger.error(f"Error transforming text: {e}")
+            return [TextContent(type="text", text=f"Error: {str(e)}")]
     
     async def handle_list_generated_documents(self, arguments: Dict[str, Any]) -> List[TextContent]:
         """List generated documents"""
@@ -296,6 +343,8 @@ def create_server() -> Server:
                 return await doc_server.handle_get_document_template(arguments)
             elif name == "add_document_type":
                 return await doc_server.handle_add_document_type(arguments)
+            elif name == "transform_text":
+                return await doc_server.handle_transform_text(arguments)
             elif name == "list_generated_documents":
                 return await doc_server.handle_list_generated_documents(arguments)
             elif name == "get_generated_document":

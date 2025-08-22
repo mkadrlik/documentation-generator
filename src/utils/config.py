@@ -56,14 +56,20 @@ class Config:
                 f.write('test')
             os.unlink(test_file)
             return primary_path
-        except (PermissionError, OSError):
+        except (PermissionError, OSError) as e:
             # Fall back to temp directory
             try:
                 os.makedirs(fallback_path, exist_ok=True)
+                # Test write permissions for fallback
+                test_file = os.path.join(fallback_path, '.write_test')
+                with open(test_file, 'w') as f:
+                    f.write('test')
+                os.unlink(test_file)
                 return fallback_path
-            except (PermissionError, OSError):
+            except (PermissionError, OSError) as e2:
                 # Last resort: use current directory
-                return os.getcwd()
+                current_dir = os.getcwd()
+                return current_dir
     
     def get_ai_config(self, provider: str) -> Dict[str, Any]:
         """Get AI provider configuration"""

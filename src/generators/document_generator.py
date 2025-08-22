@@ -1,7 +1,6 @@
 """Document generator with AI integration"""
 
 import json
-import os
 import uuid
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -20,14 +19,16 @@ class DocumentGenerator:
     def __init__(self, config):
         self.config = config
         self.ai_client = AIClient(config)
-        self.templates = DocumentTemplates()
-        self.output_dir = Path(config.output_dir)
+
+        # Pass configured templates directory to avoid hard-coded /app path during tests
+        self.templates = DocumentTemplates(templates_dir=self.config.templates_dir)
+        self.output_dir = Path(self.config.output_dir)
         self.metadata_file = self.output_dir / "documents_metadata.json"
-        self.metrics = get_metrics(config)
-        
+        self.metrics = get_metrics(self.config)
+
         # Load existing metadata
         self._load_metadata()
-        
+
         # Update template count metric
         self.metrics.update_template_count(len(self.templates.get_all_types()))
     
@@ -55,7 +56,7 @@ class DocumentGenerator:
         """Get all available document types"""
         return self.templates.get_all_types()
     
-    def get_template(self, doc_type: str) -> str:
+    def get_template(self, doc_type: str) -> Optional[str]:
         """Get template for a document type"""
         return self.templates.get_template(doc_type)
     
@@ -73,10 +74,10 @@ class DocumentGenerator:
         doc_type: str,
         title: str,
         context: str = "",
-        ai_provider: str = None,
-        model: str = None,
-        max_tokens: int = None,
-        temperature: float = None
+        ai_provider: Optional[str] = None,
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None
     ) -> Dict[str, Any]:
         """Generate documentation from content"""
         
@@ -95,10 +96,10 @@ class DocumentGenerator:
                                     model or self.config.default_model, self.metrics) as timer:
             markdown_content = await self.ai_client.generate_text(
                 prompt=prompt,
-                provider=ai_provider,
-                model=model,
-                max_tokens=max_tokens,
-                temperature=temperature
+                provider=ai_provider or self.config.default_ai_provider,
+                model=model or self.config.default_model,
+                max_tokens=max_tokens or self.config.default_max_tokens,
+                temperature=temperature or self.config.default_temperature
             )
             
             # Estimate tokens used (rough approximation: 1 token ≈ 4 characters)
