@@ -48,7 +48,17 @@ fi
 echo "Directory setup complete!"
 echo ""
 
+# Debug: Print environment variables
+echo "=== Environment Variables ==="
+env | sort
+echo "==========================="
+
+# Debug: Print command line arguments
+echo "=== Command Line Arguments ==="
+echo "$@"
+echo "==========================="
+
 # Start the main application
 echo "Starting Documentation Generator..."
 cd /app/src
-exec python main.py "$@"
+exec python -u main.py "$@"

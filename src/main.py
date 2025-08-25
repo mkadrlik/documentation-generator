@@ -374,31 +374,37 @@ async def main():
     """Main entry point"""
     logger.info("Starting Documentation Generator MCP Server...")
     
+    # Debug: Print environment variables
+    import os
+    logger.info("Environment variables:")
+    for key, value in sorted(os.environ.items()):
+        logger.info(f"  {key}={value}")
+    
     # Initialize server
     server = create_server()
     
     # Run server with stdio transport
     async with stdio_server() as (read_stream, write_stream):
+        # Debug: Print initialization options
+        init_options = server.create_initialization_options()
+        logger.info(f"Initialization options type: {type(init_options)}")
+        
+        if hasattr(init_options, '__dict__'):
+            logger.info("Initialization options attributes:")
+            for key, value in init_options.__dict__.items():
+                logger.info(f"  {key}={value}")
+        
         # Use the original initialization options but catch and log any errors
         try:
-            init_options = server.create_initialization_options()
-            # Remove any problematic fields that might be causing JSON parsing issues
-            if hasattr(init_options, '__dict__'):
-                # If it's an object with attributes, convert to dict
-                init_dict = init_options.__dict__
-                # Remove any fields with '=' in them
-                for key in list(init_dict.keys()):
-                    if isinstance(init_dict[key], str) and '=' in init_dict[key]:
-                        logger.warning(f"Removing problematic field {key} with value {init_dict[key]}")
-                        del init_dict[key]
-                # Use the cleaned dict
-                await server.run(read_stream, write_stream, init_options)
-            else:
-                # Use original options
-                await server.run(read_stream, write_stream, init_options)
+            # Run server with debugging
+            logger.info("Running server with stdio transport...")
+            await server.run(read_stream, write_stream, init_options)
         except Exception as e:
             logger.error(f"Error during initialization: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             # Fall back to original behavior
+            logger.info("Falling back to original behavior...")
             await server.run(read_stream, write_stream, server.create_initialization_options())
 
 
