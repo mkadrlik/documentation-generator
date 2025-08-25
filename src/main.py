@@ -370,6 +370,9 @@ def create_server() -> Server:
     return server
 
 
+# Import json for debugging
+import json
+
 async def main():
     """Main entry point"""
     logger.info("Starting Documentation Generator MCP Server...")
@@ -393,6 +396,23 @@ async def main():
             logger.info("Initialization options attributes:")
             for key, value in init_options.__dict__.items():
                 logger.info(f"  {key}={value}")
+        
+        # Debug: Print initialization options as JSON
+        try:
+            if hasattr(init_options, '__dict__'):
+                # Convert to dict and then to JSON
+                init_dict = {}
+                for key, value in init_options.__dict__.items():
+                    # Skip complex objects that might not be JSON serializable
+                    if isinstance(value, (str, int, float, bool, type(None))):
+                        init_dict[key] = value
+                    else:
+                        init_dict[key] = str(value)
+                
+                json_str = json.dumps(init_dict)
+                logger.info(f"Initialization options JSON (simplified): {json_str}")
+        except Exception as e:
+            logger.error(f"Error converting initialization options to JSON: {e}")
         
         # Use the original initialization options but catch and log any errors
         try:
